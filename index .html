@@ -1,0 +1,285 @@
+<div id="app-root"></div>
+<style>
+  #app-root {
+    --bg: #14161B;
+    --panel: #1B1E25;
+    --ink: #F2F1ED;
+    --ink-dim: #8B8F98;
+    --line: #2A2E37;
+    --done-bg: #202227;
+    --done-ink: #5C6068;
+    font-family: "Hiragino Sans", "Noto Sans JP", "Yu Gothic", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100%;
+    padding: 22px 16px 40px;
+    box-sizing: border-box;
+    border-radius: 14px;
+  }
+  #app-root * { box-sizing: border-box; }
+
+  .header { margin-bottom: 18px; }
+  .header .eyebrow {
+    font-size: 12px;
+    color: var(--ink-dim);
+    letter-spacing: 0.02em;
+    margin-bottom: 4px;
+  }
+  .header h1 {
+    font-size: 21px;
+    font-weight: 700;
+    margin: 0 0 14px 0;
+    letter-spacing: 0.01em;
+  }
+
+  .progress-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  .progress-track {
+    flex: 1;
+    height: 10px;
+    background: var(--line);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #69DB7C, #38D9A9);
+    transition: width 0.35s ease;
+    width: 0%;
+  }
+  .progress-label {
+    font-size: 13px;
+    color: var(--ink-dim);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cat-group { margin-top: 22px; }
+  .cat-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink-dim);
+    margin-bottom: 8px;
+    padding-left: 2px;
+  }
+  .cat-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .cat-count {
+    margin-left: auto;
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .card {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: var(--panel);
+    border-left: 4px solid var(--accent, #4DABF7);
+    border-radius: 10px;
+    padding: 13px 14px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+  .card:active { transform: scale(0.995); }
+
+  .card.done {
+    background: var(--done-bg);
+    border-left-color: #3A3D44;
+  }
+
+  .checkbox {
+    width: 21px; height: 21px;
+    border-radius: 6px;
+    border: 2px solid var(--accent, #4DABF7);
+    flex-shrink: 0;
+    margin-top: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease, border-color 0.2s ease;
+  }
+  .card.done .checkbox {
+    background: #4A4E57;
+    border-color: #4A4E57;
+  }
+  .checkbox svg {
+    width: 13px; height: 13px;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+  .card.done .checkbox svg { opacity: 1; }
+
+  .task-text {
+    font-size: 14.5px;
+    line-height: 1.5;
+    color: var(--ink);
+    transition: color 0.2s ease;
+  }
+  .card.done .task-text {
+    color: var(--done-ink);
+    text-decoration: line-through;
+    text-decoration-color: #4A4E57;
+  }
+
+  .footer-note {
+    margin-top: 26px;
+    font-size: 12px;
+    color: var(--ink-dim);
+    text-align: center;
+  }
+</style>
+
+<script>
+(function () {
+  const CATS = [
+    { key: "最優先",              color: "#FF6B6B" },
+    { key: "生活まわり",           color: "#FFD43B" },
+    { key: "読書・作業環境",       color: "#69DB7C" },
+    { key: "タイムロッキングコンテナ準備", color: "#4DABF7" },
+    { key: "持ち物まわり",         color: "#B197FC" },
+    { key: "自転車で買い物",       color: "#FFA94D" },
+    { key: "コンテナ到着後",       color: "#38D9A9" },
+    { key: "詰み本を読み終わったら", color: "#F783AC" },
+    { key: "デジタル制限を開いたら", color: "#22D3EE" },
+    { key: "余裕があれば",         color: "#ADB5BD" },
+  ];
+
+  const TASKS = [
+    { id: "t1",  cat: "最優先", text: "シフト休み希望を出す（9日締切）", done: false },
+    { id: "t2",  cat: "最優先", text: "ホームページの調べ物をAIで進める（3日間の1日目）", done: false },
+
+    { id: "t3",  cat: "生活まわり", text: "体重を計る", done: false },
+    { id: "t4",  cat: "生活まわり", text: "洗濯する", done: true },
+    { id: "t5",  cat: "生活まわり", text: "洗濯物を干す", done: false },
+    { id: "t6",  cat: "生活まわり", text: "お粥を作る", done: false },
+    { id: "t7",  cat: "生活まわり", text: "ヒュエル分配", done: true },
+    { id: "t8",  cat: "生活まわり", text: "ビタミンC錠剤を分配", done: true },
+    { id: "t9",  cat: "生活まわり", text: "藤田さんのLINE返信を確認", done: true },
+    { id: "t10", cat: "生活まわり", text: "ココア調整：粉を全て戻して48〜72g追加（合計68〜102g）", done: true },
+
+    { id: "t11", cat: "読書・作業環境", text: "日記帳を探す", done: false },
+    { id: "t12", cat: "読書・作業環境", text: "A4リングノートを出す（読書用）", done: false },
+    { id: "t13", cat: "読書・作業環境", text: "スマホなしポモドーロタイマーと充電器を探す（25-5分＋お絵描き5分）", done: false },
+    { id: "t14", cat: "読書・作業環境", text: "スマホの持ち物メモを紙に書き出す", done: false },
+    { id: "t15", cat: "読書・作業環境", text: "2階のブックスタンドを出して本を開いて置く", done: false },
+    { id: "t16", cat: "読書・作業環境", text: "ベッドの香水を忘れない場所に置く", done: false },
+
+    { id: "t17", cat: "タイムロッキングコンテナ準備", text: "コンセントの位置を確認", done: true },
+    { id: "t18", cat: "タイムロッキングコンテナ準備", text: "充電器を用意", done: true },
+
+    { id: "t19", cat: "持ち物まわり", text: "ヘアピンを探す", done: false },
+    { id: "t20", cat: "持ち物まわり", text: "ヘアピン入れ物を探す（ピルケース候補）", done: false },
+    { id: "t21", cat: "持ち物まわり", text: "ピルケースに磁石を貼る", done: false },
+
+    { id: "t22", cat: "自転車で買い物", text: "単四電池を買う", done: false },
+    { id: "t23", cat: "自転車で買い物", text: "歯磨き粉を買う", done: false },
+    { id: "t29", cat: "自転車で買い物", text: "時計を買う", done: false },
+
+    { id: "t24", cat: "コンテナ到着後", text: "コンテナを持ち歩いて一緒に買い物（タイマー・壁掛け入れ物・強力な粘着物）", done: false },
+
+    { id: "t25", cat: "詰み本を読み終わったら", text: "図書館カードで『思考の整理学』（外山滋比古）を借りる", done: false },
+
+    { id: "t26", cat: "デジタル制限を開いたら", text: "ChatGPTで動画自動録画の仕組みを作ってもらう", done: false },
+
+    { id: "t27", cat: "余裕があれば", text: "横浜図書館のカード確認（見つからなければ再発行）", done: false },
+    { id: "t28", cat: "余裕があれば", text: "シナールを買う（10月上旬までに）", done: false },
+  ];
+
+  const STORAGE_KEY = "todo-status-v1";
+  let state = {};
+  TASKS.forEach(t => { state[t.id] = t.done; });
+
+  const root = document.getElementById("app-root");
+
+  function checkSvg() {
+    return '<svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.2 11.7L13 4.5" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  }
+
+  function render() {
+    const total = TASKS.length;
+    const doneCount = TASKS.filter(t => state[t.id]).length;
+    const pct = total ? Math.round((doneCount / total) * 100) : 0;
+
+    let html = '';
+    html += '<div class="header">';
+    html += '  <div class="eyebrow">TODAY\'S TODO</div>';
+    html += '  <h1>今日のやることリスト</h1>';
+    html += '  <div class="progress-wrap">';
+    html += '    <div class="progress-track"><div class="progress-fill" style="width:' + pct + '%"></div></div>';
+    html += '    <div class="progress-label">' + doneCount + ' / ' + total + '</div>';
+    html += '  </div>';
+    html += '</div>';
+
+    CATS.forEach(cat => {
+      const items = TASKS.filter(t => t.cat === cat.key);
+      if (items.length === 0) return;
+      const catDone = items.filter(t => state[t.id]).length;
+
+      html += '<div class="cat-group">';
+      html += '  <div class="cat-title"><span class="cat-dot" style="background:' + cat.color + '"></span>' + cat.key + '<span class="cat-count">' + catDone + '/' + items.length + '</span></div>';
+
+      items.forEach(t => {
+        const isDone = !!state[t.id];
+        html += '<div class="card ' + (isDone ? 'done' : '') + '" style="--accent:' + cat.color + '" data-id="' + t.id + '">';
+        html += '  <div class="checkbox">' + checkSvg() + '</div>';
+        html += '  <div class="task-text">' + t.text + '</div>';
+        html += '</div>';
+      });
+
+      html += '</div>';
+    });
+
+    html += '<div class="footer-note">カードをタップして完了⇄未完了を切り替え</div>';
+
+    root.innerHTML = html;
+
+    root.querySelectorAll('.card').forEach(card => {
+      card.addEventListener('click', () => {
+        const id = card.getAttribute('data-id');
+        state[id] = !state[id];
+        save();
+        render();
+      });
+    });
+  }
+
+  async function load() {
+    try {
+      const result = await window.storage.get(STORAGE_KEY, false);
+      if (result && result.value) {
+        const saved = JSON.parse(result.value);
+        Object.keys(saved).forEach(id => {
+          if (id in state) state[id] = saved[id];
+        });
+      }
+    } catch (e) {
+      // no saved state yet, use defaults
+    }
+    render();
+  }
+
+  async function save() {
+    try {
+      await window.storage.set(STORAGE_KEY, JSON.stringify(state), false);
+    } catch (e) {
+      console.error('save failed', e);
+    }
+  }
+
+  load();
+})();
+</script>
